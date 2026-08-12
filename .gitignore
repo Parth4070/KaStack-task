@@ -1,0 +1,11 @@
+given_data/
+outputs/
+models/
+tests/
+
+__pycache__/
+*.pyc
+
+.venv/
+venv/
+.env
