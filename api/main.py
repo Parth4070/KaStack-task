@@ -27,16 +27,34 @@ async def index():
         "api/static/index.html"
     )
 
-print("Loading message classifier...")
-classifier = MessageClassifier()
 
-print("Loading task/event extractor...")
-task_event_extractor = TaskEventExtractor()
+classifier = None
 
-print("Loading sensitive detector...")
-sensitive_detector = SensitiveDetector()
+task_event_extractor = None
+sensitive_detector = None
 
-print("All models loaded.")
+def load_models():
+
+    global classifier
+    global task_event_extractor
+    global sensitive_detector
+
+    if classifier is None:
+
+        print("Loading message classifier...")
+        classifier = MessageClassifier()
+
+    if task_event_extractor is None:
+
+        print("Loading task/event extractor...")
+        task_event_extractor = TaskEventExtractor()
+
+    if sensitive_detector is None:
+
+        print("Loading sensitive detector...")
+        sensitive_detector = SensitiveDetector()
+
+    print("All models loaded.")
 
 class MessageRequest(BaseModel):
 
@@ -59,6 +77,7 @@ def health():
 def analyze_message(
     request: MessageRequest
 ):
+    load_models()
 
     classification = classifier.classify(
         request.message
