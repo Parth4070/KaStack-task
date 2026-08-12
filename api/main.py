@@ -1,5 +1,6 @@
 from datetime import datetime
-
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -14,7 +15,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.mount(
+    "/static",
+    StaticFiles(directory="api/static"),
+    name="static"
+)
 
+@app.get("/")
+async def index():
+    return FileResponse(
+        "api/static/index.html"
+    )
 
 print("Loading message classifier...")
 classifier = MessageClassifier()

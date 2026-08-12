@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Message Intelligence</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .result {
+            display: none;
+        }
+
+        .section {
+            margin-top: 20px;
+            padding: 18px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .section h3 {
+            margin-top: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #e5e7eb;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #111827;
+            color: #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-top: 15px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Message Intelligence</h1>
+
+    <p class="subtitle">
+        Local NLP pipeline for message classification,
+        task/event extraction and sensitive information detection.
+    </p>
+
+
+    <!-- Input -->
+
+    <div class="card">
+
+        <label>Message ID</label>
+
+        <input
+            id="messageId"
+            value="DEMO_001"
+        >
+
+
+        <label>Sender</label>
+
+        <input
+            id="sender"
+            value="Demo User"
+        >
+
+
+        <label>Timestamp</label>
+
+        <input
+            id="timestamp"
+            type="datetime-local"
+        >
+
+
+        <label>Message</label>
+
+        <textarea
+            id="message"
+            placeholder="Enter a message..."
+        ></textarea>
+
+
+        <button onclick="analyzeMessage()">
+            Analyze Message
+        </button>
+
+        <div
+            id="error"
+            class="error"
+        ></div>
+
+    </div>
+
+
+    <!-- Results -->
+
+    <div
+        id="result"
+        class="card result"
+    >
+
+        <h2>Analysis Result</h2>
+
+
+        <!-- Classification -->
+
+        <div class="section">
+
+            <h3>Classification</h3>
+
+            <span
+                id="category"
+                class="badge"
+            ></span>
+
+            <p>
+                <strong>Confidence:</strong>
+                <span id="confidence"></span>
+            </p>
+
+            <p>
+                <strong>Reason:</strong>
+                <span id="reason"></span>
+            </p>
+
+        </div>
+
+
+        <!-- Task/Event -->
+
+        <div class="section">
+
+            <h3>Task / Event</h3>
+
+            <pre id="taskEvent">
+No task or event detected.
+            </pre>
+
+        </div>
+
+
+        <!-- Sensitive -->
+
+        <div class="section">
+
+            <h3>Sensitive Information</h3>
+
+            <pre id="sensitive">
+No sensitive information detected.
+            </pre>
+
+        </div>
+
+
+        <!-- JSON -->
+
+        <div class="section">
+
+            <h3>Structured Output</h3>
+
+            <pre id="jsonOutput"></pre>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+async function analyzeMessage() {
+
+    const errorElement =
+        document.getElementById("error");
+
+    errorElement.textContent = "";
+
+
+    const messageId =
+        document.getElementById("messageId").value;
+
+    const sender =
+        document.getElementById("sender").value;
+
+    const timestamp =
+        document.getElementById("timestamp").value;
+
+    const message =
+        document.getElementById("message").value;
+
+
+    if (!message) {
+
+        errorElement.textContent =
+            "Please enter a message.";
+
+        return;
+    }
+
+
+    const payload = {
+
+        message_id: messageId,
+
+        timestamp:
+            timestamp
+                ? new Date(timestamp).toISOString()
+                : new Date().toISOString(),
+
+        sender: sender,
+
+        message: message
+    };
+
+
+    try {
+
+        const response = await fetch(
+            "/analyze",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify(payload)
+            }
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "API request failed."
+            );
+        }
+
+
+        const result =
+            await response.json();
+
+
+        // Show result
+
+        document.getElementById(
+            "result"
+        ).style.display = "block";
+
+
+        // Classification
+
+        document.getElementById(
+            "category"
+        ).textContent =
+            result.classification.category;
+
+
+        document.getElementById(
+            "confidence"
+        ).textContent =
+            result.classification.confidence;
+
+
+        document.getElementById(
+            "reason"
+        ).textContent =
+            result.classification.reason;
+
+
+        // Task / Event
+
+        if (result.task_event) {
+
+            document.getElementById(
+                "taskEvent"
+            ).textContent =
+                JSON.stringify(
+                    result.task_event,
+                    null,
+                    2
+                );
+
+        } else {
+
+            document.getElementById(
+                "taskEvent"
+            ).textContent =
+                "No task or event detected.";
+        }
+
+
+        // Sensitive
+
+        document.getElementById(
+            "sensitive"
+        ).textContent =
+            JSON.stringify(
+                result.sensitive,
+                null,
+                2
+            );
+
+
+        // Full JSON
+
+        document.getElementById(
+            "jsonOutput"
+        ).textContent =
+            JSON.stringify(
+                result,
+                null,
+                2
+            );
+
+    }
+
+    catch (error) {
+
+        errorElement.textContent =
+            error.message;
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>
