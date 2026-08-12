@@ -8,3 +8,4 @@ spacy
 dateparser
 gliner
 sentence-transformers
+fastapi[standard]
